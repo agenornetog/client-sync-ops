@@ -1,11 +1,8 @@
 import { useState, useMemo } from 'react';
-import { mockConversations, mockMessages, mockNotes, mockTags, mockUsers } from '@/data/mock';
+import { mockConversations, mockMessages, mockNotes } from '@/data/mock';
 import { ConversationList } from '@/components/inbox/ConversationList';
 import { ChatArea } from '@/components/inbox/ChatArea';
 import { ContactPanel } from '@/components/inbox/ContactPanel';
-import type { Conversation, Message } from '@/types';
-import { SidebarTrigger } from '@/components/ui/sidebar';
-import { Menu } from 'lucide-react';
 
 export default function Inbox() {
   const [selectedId, setSelectedId] = useState<string>(mockConversations[0]?.id || '');
@@ -31,14 +28,11 @@ export default function Inbox() {
   const messages = mockMessages[selectedId] || [];
 
   return (
-    <div className="flex h-full">
+    <div className="flex h-full bg-background">
       {/* Conversation List */}
-      <div className="w-80 xl:w-96 border-r flex flex-col shrink-0 bg-card">
-        <div className="p-3 border-b flex items-center gap-2">
-          <SidebarTrigger className="text-muted-foreground hover:text-foreground">
-            <Menu className="h-4 w-4" />
-          </SidebarTrigger>
-          <h2 className="text-lg font-semibold flex-1">Inbox</h2>
+      <div className="w-80 xl:w-[340px] border-r flex flex-col shrink-0">
+        <div className="p-4 border-b">
+          <h2 className="text-lg font-semibold">Inbox</h2>
         </div>
         <ConversationList
           conversations={filtered}
@@ -62,8 +56,8 @@ export default function Inbox() {
         ) : (
           <div className="flex-1 flex items-center justify-center text-muted-foreground">
             <div className="text-center">
-              <p className="text-lg font-medium">Selecione uma conversa</p>
-              <p className="text-sm">Escolha uma conversa na lista para começar</p>
+              <p className="text-base font-medium">Selecione uma conversa</p>
+              <p className="text-sm mt-1">Escolha uma conversa na lista para começar</p>
             </div>
           </div>
         )}
@@ -71,7 +65,7 @@ export default function Inbox() {
 
       {/* Contact Panel */}
       {selected && showContactPanel && (
-        <div className="w-80 border-l shrink-0 bg-card overflow-auto hidden xl:block">
+        <div className="w-80 border-l shrink-0 overflow-auto hidden xl:block">
           <ContactPanel
             conversation={selected}
             notes={mockNotes.filter(n => n.conversation_id === selectedId)}
