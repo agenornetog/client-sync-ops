@@ -1,16 +1,10 @@
 import {
   LayoutDashboard, MessageSquare, Users, Tags, Zap, GitBranch,
-  Radio, UsersRound, BarChart3, Settings, MessageCircle, LogOut, ChevronLeft
+  Radio, UsersRound, BarChart3, Settings
 } from 'lucide-react';
-import { NavLink } from '@/components/NavLink';
-import { useLocation } from 'react-router-dom';
-import {
-  Sidebar, SidebarContent, SidebarGroup, SidebarGroupContent,
-  SidebarMenu, SidebarMenuButton, SidebarMenuItem, SidebarFooter, useSidebar,
-} from '@/components/ui/sidebar';
-import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { Button } from '@/components/ui/button';
+import { NavLink, useLocation } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 
 const mainNav = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -22,96 +16,87 @@ const mainNav = [
   { title: 'Canais', url: '/canais', icon: Radio },
   { title: 'Grupos', url: '/grupos', icon: UsersRound },
   { title: 'Relatórios', url: '/relatorios', icon: BarChart3 },
+];
+
+const bottomNav = [
   { title: 'Configurações', url: '/configuracoes', icon: Settings },
 ];
 
 export function AppSidebar() {
-  const { state, toggleSidebar } = useSidebar();
-  const collapsed = state === 'collapsed';
   const location = useLocation();
 
   return (
-    <Sidebar collapsible="icon" className="border-r-0">
-      <div className={cn(
-        "flex items-center gap-3 px-4 py-5 border-b border-sidebar-border",
-        collapsed && "justify-center px-2"
-      )}>
-        <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-lg bg-sidebar-primary text-sidebar-primary-foreground font-bold text-sm">
+    <TooltipProvider delayDuration={0}>
+      <aside className="w-[60px] shrink-0 h-screen flex flex-col items-center py-4 border-r bg-background">
+        {/* Logo */}
+        <div className="flex h-9 w-9 items-center justify-center rounded-lg bg-foreground text-background font-bold text-sm mb-6">
           A
         </div>
-        {!collapsed && (
-          <div className="flex-1 flex items-center justify-between">
-            <div>
-              <h2 className="text-sm font-semibold text-sidebar-foreground">AtendePro</h2>
-              <p className="text-xs text-sidebar-foreground/60">Workspace</p>
-            </div>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="h-6 w-6 text-sidebar-foreground/50 hover:text-sidebar-foreground hover:bg-sidebar-accent"
-              onClick={toggleSidebar}
-            >
-              <ChevronLeft className="h-4 w-4" />
-            </Button>
+
+        {/* Main nav */}
+        <nav className="flex-1 flex flex-col items-center gap-1">
+          {mainNav.map((item) => {
+            const isActive = location.pathname === item.url || location.pathname.startsWith(item.url + '/');
+            return (
+              <Tooltip key={item.title}>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to={item.url}
+                    className={cn(
+                      "relative flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+                      isActive
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-[18px] w-[18px]" />
+                    {item.badge && (
+                      <span className="absolute -top-0.5 -right-0.5 h-4 min-w-4 flex items-center justify-center rounded-full bg-destructive text-[9px] font-bold text-destructive-foreground px-1">
+                        {item.badge}
+                      </span>
+                    )}
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-xs">
+                  {item.title}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+        </nav>
+
+        {/* Bottom nav */}
+        <div className="flex flex-col items-center gap-1 mb-2">
+          {bottomNav.map((item) => {
+            const isActive = location.pathname === item.url;
+            return (
+              <Tooltip key={item.title}>
+                <TooltipTrigger asChild>
+                  <NavLink
+                    to={item.url}
+                    className={cn(
+                      "flex h-10 w-10 items-center justify-center rounded-xl transition-colors",
+                      isActive
+                        ? "bg-foreground text-background"
+                        : "text-muted-foreground hover:bg-muted hover:text-foreground"
+                    )}
+                  >
+                    <item.icon className="h-[18px] w-[18px]" />
+                  </NavLink>
+                </TooltipTrigger>
+                <TooltipContent side="right" className="text-xs">
+                  {item.title}
+                </TooltipContent>
+              </Tooltip>
+            );
+          })}
+
+          {/* Avatar */}
+          <div className="mt-2 h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
+            AS
           </div>
-        )}
-      </div>
-
-      <SidebarContent className="px-2 py-3">
-        <SidebarGroup>
-          <SidebarGroupContent>
-            <SidebarMenu>
-              {mainNav.map((item) => {
-                const isActive = location.pathname === item.url || location.pathname.startsWith(item.url + '/');
-                return (
-                  <SidebarMenuItem key={item.title}>
-                    <SidebarMenuButton asChild>
-                      <NavLink
-                        to={item.url}
-                        className={cn(
-                          "flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm transition-all",
-                          "text-sidebar-foreground/70 hover:text-sidebar-foreground hover:bg-sidebar-accent",
-                          isActive && "bg-sidebar-accent text-sidebar-primary font-medium"
-                        )}
-                        activeClassName=""
-                      >
-                        <item.icon className={cn("h-4.5 w-4.5 shrink-0", isActive && "text-sidebar-primary")} />
-                        {!collapsed && (
-                          <span className="flex-1">{item.title}</span>
-                        )}
-                        {!collapsed && item.badge && (
-                          <span className="flex h-5 min-w-5 items-center justify-center rounded-full bg-sidebar-primary px-1.5 text-[10px] font-bold text-sidebar-primary-foreground">
-                            {item.badge}
-                          </span>
-                        )}
-                      </NavLink>
-                    </SidebarMenuButton>
-                  </SidebarMenuItem>
-                );
-              })}
-            </SidebarMenu>
-          </SidebarGroupContent>
-        </SidebarGroup>
-      </SidebarContent>
-
-      <SidebarFooter className="border-t border-sidebar-border p-3">
-        <div className={cn("flex items-center gap-3", collapsed && "justify-center")}>
-          <Avatar className="h-8 w-8">
-            <AvatarFallback className="bg-sidebar-accent text-sidebar-foreground text-xs font-medium">AS</AvatarFallback>
-          </Avatar>
-          {!collapsed && (
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-medium text-sidebar-foreground truncate">Ana Silva</p>
-              <p className="text-xs text-sidebar-foreground/50 truncate">Admin</p>
-            </div>
-          )}
-          {!collapsed && (
-            <Button variant="ghost" size="icon" className="h-7 w-7 text-sidebar-foreground/40 hover:text-sidebar-foreground">
-              <LogOut className="h-3.5 w-3.5" />
-            </Button>
-          )}
         </div>
-      </SidebarFooter>
-    </Sidebar>
+      </aside>
+    </TooltipProvider>
   );
 }
