@@ -59,7 +59,7 @@ interface ConversationRow {
   }[];
 }
 
-function mapRowToConversation(row: ConversationRow): Conversation {
+function mapRowToConversation(row: any, agentsMap: Record<string, any> = {}): Conversation {
   const contact: Contact = {
     id: row.contacts.id,
     workspace_id: row.contacts.workspace_id,
@@ -90,14 +90,14 @@ function mapRowToConversation(row: ConversationRow): Conversation {
     status: row.status as Conversation['status'],
     instance_id: row.instance_id || undefined,
     assigned_agent_id: row.assigned_agent_id || undefined,
-    assigned_agent: row.profiles ? {
-      id: row.profiles.id,
+    assigned_agent: row.assigned_agent_id && agentsMap[row.assigned_agent_id] ? {
+      id: agentsMap[row.assigned_agent_id].id,
       workspace_id: row.workspace_id,
-      name: row.profiles.name,
-      email: row.profiles.email,
-      avatar_url: row.profiles.avatar_url || undefined,
+      name: agentsMap[row.assigned_agent_id].name,
+      email: agentsMap[row.assigned_agent_id].email,
+      avatar_url: agentsMap[row.assigned_agent_id].avatar_url || undefined,
       role: 'atendente' as const,
-      is_online: row.profiles.is_online,
+      is_online: agentsMap[row.assigned_agent_id].is_online,
       created_at: '',
     } : undefined,
     queue_id: row.queue_id || undefined,
@@ -132,14 +132,29 @@ export function useConversations() {
         .select(`
           *,
           contacts(*),
-          profiles:assigned_agent_id(id, name, email, avatar_url, is_online),
           queues(*),
           conversation_tags(tags(*))
         `)
         .order('last_message_at', { ascending: false, nullsFirst: false });
 
       if (error) throw error;
-      return (data || []).map((row: any) => mapRowToConversation(row));
+
+      // Fetch agent profiles separately for assigned conversations
+      const agentIds = [...new Set((data || []).map(c => c.assigned_agent_id).filter(Boolean))];
+      let agentsMap: Record<string, any> = {};
+      
+      if (agentIds.length > 0) {
+        const { data: agents } = await supabase
+          .from('profiles')
+          .select('id, name, email, avatar_url, is_online')
+          .in('id', agentIds);
+        
+        if (agents) {
+          agentsMap = Object.fromEntries(agents.map(a => [a.id, a]));
+        }
+      }
+
+      return (data || []).map((row: any) => mapRowToConversation(row, agentsMap));
     },
   });
 
