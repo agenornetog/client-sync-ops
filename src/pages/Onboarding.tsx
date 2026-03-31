@@ -6,7 +6,9 @@ import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/hooks/use-toast';
-import { Building2, Clock, Users, ArrowRight, Check } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { supabase } from '@/integrations/supabase/client';
+import { Building2, Clock, Users, ArrowRight, Check, Loader2 } from 'lucide-react';
 
 const steps = ['Empresa', 'Horários', 'Equipe'];
 
@@ -15,18 +17,74 @@ export default function Onboarding() {
   const [companyName, setCompanyName] = useState('');
   const [timezone, setTimezone] = useState('America/Sao_Paulo');
   const [inviteEmails, setInviteEmails] = useState('');
+  const [saving, setSaving] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const { user } = useAuth();
 
-  const next = () => {
-    if (step < 2) setStep(step + 1);
-    else {
+  const handleFinish = async () => {
+    if (!user) return;
+    setSaving(true);
+
+    try {
+      // 1. Create workspace
+      const slug = companyName
+        .toLowerCase()
+        .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || 'workspace';
+
+      const { data: workspace, error: wsError } = await supabase
+        .from('workspaces')
+        .insert({ name: companyName, slug, timezone })
+        .select('id')
+        .single();
+
+      if (wsError) throw wsError;
+
+      // 2. Link profile to workspace
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({ workspace_id: workspace.id, name: user.email?.split('@')[0] || '' })
+        .eq('id', user.id);
+
+      if (profileError) throw profileError;
+
+      // 3. Add admin role
+      const { error: roleError } = await supabase
+        .from('user_roles')
+        .insert({ user_id: user.id, role: 'admin' });
+
+      if (roleError && !roleError.message.includes('duplicate')) throw roleError;
+
+      // 4. Create business hours
+      const businessHours = [0, 1, 2, 3, 4, 5, 6].map(day => ({
+        workspace_id: workspace.id,
+        day_of_week: day,
+        is_open: day >= 1 && day <= 5,
+        open_time: day === 6 ? '09:00' : '08:00',
+        close_time: day === 6 ? '13:00' : '18:00',
+      }));
+
+      await supabase.from('business_hours').insert(businessHours);
+
       toast({ title: 'Configuração concluída!', description: 'Sua plataforma está pronta para uso.' });
-      navigate('/dashboard');
+      navigate('/inbox');
+    } catch (err: any) {
+      toast({ title: 'Erro ao criar workspace', description: err.message, variant: 'destructive' });
+    } finally {
+      setSaving(false);
     }
   };
 
-  const icons = [Building2, Clock, Users];
+  const next = () => {
+    if (step === 0 && !companyName.trim()) {
+      toast({ title: 'Informe o nome da empresa', variant: 'destructive' });
+      return;
+    }
+    if (step < 2) setStep(step + 1);
+    else handleFinish();
+  };
 
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
@@ -36,7 +94,6 @@ export default function Onboarding() {
           <span className="text-2xl font-bold">AtendePro</span>
         </div>
 
-        {/* Steps indicator */}
         <div className="flex items-center justify-center gap-2 mb-6">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-2">
@@ -122,7 +179,8 @@ export default function Onboarding() {
             {step > 0 ? (
               <Button variant="outline" onClick={() => setStep(step - 1)}>Voltar</Button>
             ) : <div />}
-            <Button onClick={next}>
+            <Button onClick={next} disabled={saving}>
+              {saving && <Loader2 className="h-4 w-4 mr-1 animate-spin" />}
               {step === 2 ? 'Finalizar' : 'Próximo'} <ArrowRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
