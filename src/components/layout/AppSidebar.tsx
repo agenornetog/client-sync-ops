@@ -1,10 +1,11 @@
 import {
   LayoutDashboard, MessageSquare, Users, Tags, Zap, GitBranch,
-  Radio, UsersRound, BarChart3, Settings
+  Radio, UsersRound, BarChart3, Settings, LogOut
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/contexts/AuthContext';
 
 const mainNav = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
