@@ -103,10 +103,30 @@ export function AppSidebar() {
             );
           })}
 
+          {/* Logout */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleLogout}
+                className="flex h-10 w-10 items-center justify-center rounded-xl transition-colors text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut className="h-[18px] w-[18px]" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">Sair</TooltipContent>
+          </Tooltip>
+
           {/* Avatar */}
-          <div className="mt-2 h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-            AS
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="mt-1 h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground cursor-default">
+                {initials}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              {user?.email || 'Usuário'}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </aside>
     </TooltipProvider>
