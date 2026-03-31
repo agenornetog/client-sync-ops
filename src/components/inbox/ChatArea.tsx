@@ -13,7 +13,10 @@ import {
 } from '@/components/ui/dropdown-menu';
 import type { Conversation, Message } from '@/types';
 import { cn } from '@/lib/utils';
+import { useQuickReplies } from '@/hooks/useConversations';
 import { mockQuickReplies } from '@/data/mock';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 const statusLabel: Record<string, string> = {
   open: 'Aberta', pending: 'Pendente', attending: 'Em atendimento', resolved: 'Resolvida', closed: 'Fechada'
@@ -39,10 +42,17 @@ interface Props {
 
 export function ChatArea({ conversation, messages, onToggleContactPanel }: Props) {
   const [input, setInput] = useState('');
+  const [sending, setSending] = useState(false);
   const [showQuickReplies, setShowQuickReplies] = useState(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const contact = conversation.contact;
   const initials = contact.name.split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase();
+
+  // Quick replies from Supabase or mock
+  const { data: supaQuickReplies } = useQuickReplies();
+  const quickReplies = supaQuickReplies && supaQuickReplies.length > 0
+    ? supaQuickReplies
+    : mockQuickReplies;
 
   useEffect(() => {
     scrollRef.current?.scrollTo({ top: scrollRef.current.scrollHeight });
@@ -54,16 +64,49 @@ export function ChatArea({ conversation, messages, onToggleContactPanel }: Props
   };
 
   const filteredQuickReplies = showQuickReplies
-    ? mockQuickReplies.filter(qr => qr.shortcut.startsWith(input.toLowerCase()))
+    ? quickReplies.filter(qr => qr.shortcut.startsWith(input.toLowerCase()))
     : [];
 
   const applyQuickReply = (content: string) => {
     const replaced = content
       .replace(/\{\{nome_cliente\}\}/g, contact.name.split(' ')[0])
-      .replace(/\{\{atendente\}\}/g, 'Ana')
+      .replace(/\{\{atendente\}\}/g, 'Agente')
       .replace(/\{\{empresa\}\}/g, 'AtendePro');
     setInput(replaced);
     setShowQuickReplies(false);
+  };
+
+  const handleSend = async () => {
+    const text = input.trim();
+    if (!text || sending) return;
+
+    setSending(true);
+    try {
+      // Try sending via edge function (real UAZAPI)
+      const { data: sessionData } = await supabase.auth.getSession();
+      if (sessionData?.session) {
+        const { error } = await supabase.functions.invoke('send-message', {
+          body: {
+            type: 'text',
+            conversation_id: conversation.id,
+            content: text,
+          },
+        });
+
+        if (error) throw error;
+        setInput('');
+        toast.success('Mensagem enviada');
+      } else {
+        // No auth session — just clear input (mock mode)
+        setInput('');
+        toast.info('Modo demo: mensagem não enviada (faça login para enviar)');
+      }
+    } catch (err: any) {
+      console.error('Send error:', err);
+      toast.error('Erro ao enviar mensagem');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -199,6 +242,7 @@ export function ChatArea({ conversation, messages, onToggleContactPanel }: Props
               onChange={e => handleInputChange(e.target.value)}
               onKeyDown={e => {
                 if (e.key === 'Escape') setShowQuickReplies(false);
+                if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) handleSend();
               }}
               className="pr-10 bg-muted/50 border-0"
             />
@@ -206,7 +250,7 @@ export function ChatArea({ conversation, messages, onToggleContactPanel }: Props
               <Smile className="h-4 w-4" />
             </button>
           </div>
-          <Button size="icon" className="h-9 w-9 shrink-0" disabled={!input.trim()}>
+          <Button size="icon" className="h-9 w-9 shrink-0" disabled={!input.trim() || sending} onClick={handleSend}>
             <Send className="h-4 w-4" />
           </Button>
         </div>
