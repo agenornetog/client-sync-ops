@@ -1,17 +1,40 @@
 import { useState, useMemo } from 'react';
+import { useConversations, useMessages, useInternalNotes } from '@/hooks/useConversations';
 import { mockConversations, mockMessages, mockNotes } from '@/data/mock';
 import { ConversationList } from '@/components/inbox/ConversationList';
 import { ChatArea } from '@/components/inbox/ChatArea';
 import { ContactPanel } from '@/components/inbox/ContactPanel';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function Inbox() {
-  const [selectedId, setSelectedId] = useState<string>(mockConversations[0]?.id || '');
+  const [selectedId, setSelectedId] = useState<string>('');
   const [statusFilter, setStatusFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [showContactPanel, setShowContactPanel] = useState(true);
 
+  // Supabase data
+  const { data: supaConversations, isLoading: loadingConvs } = useConversations();
+  const { data: supaMessages } = useMessages(selectedId || null);
+  const { data: supaNotes } = useInternalNotes(selectedId || null);
+
+  // Use Supabase data if available, otherwise mock
+  const conversations = supaConversations && supaConversations.length > 0
+    ? supaConversations
+    : mockConversations;
+
+  const messages = supaMessages && supaMessages.length > 0
+    ? supaMessages
+    : (mockMessages[selectedId] || []);
+
+  const notes = supaNotes && supaNotes.length > 0
+    ? supaNotes
+    : mockNotes.filter(n => n.conversation_id === selectedId);
+
+  // Auto-select first conversation
+  const effectiveSelectedId = selectedId || conversations[0]?.id || '';
+
   const filtered = useMemo(() => {
-    let convs = mockConversations;
+    let convs = conversations;
     if (statusFilter !== 'all') convs = convs.filter(c => c.status === statusFilter);
     if (search) {
       const q = search.toLowerCase();
@@ -21,11 +44,14 @@ export default function Inbox() {
         c.last_message?.content.toLowerCase().includes(q)
       );
     }
-    return convs.sort((a, b) => new Date(b.last_message_at || b.created_at).getTime() - new Date(a.last_message_at || a.created_at).getTime());
-  }, [statusFilter, search]);
+    return convs.sort((a, b) =>
+      new Date(b.last_message_at || b.created_at).getTime() -
+      new Date(a.last_message_at || a.created_at).getTime()
+    );
+  }, [conversations, statusFilter, search]);
 
-  const selected = mockConversations.find(c => c.id === selectedId);
-  const messages = mockMessages[selectedId] || [];
+  const selected = conversations.find(c => c.id === (selectedId || effectiveSelectedId));
+  const currentMessages = selectedId ? messages : (supaMessages && supaMessages.length > 0 ? supaMessages : mockMessages[effectiveSelectedId] || []);
 
   return (
     <div className="flex h-full bg-background">
@@ -34,15 +60,29 @@ export default function Inbox() {
         <div className="p-4 border-b">
           <h2 className="text-lg font-semibold">Inbox</h2>
         </div>
-        <ConversationList
-          conversations={filtered}
-          selectedId={selectedId}
-          onSelect={setSelectedId}
-          statusFilter={statusFilter}
-          onStatusFilterChange={setStatusFilter}
-          search={search}
-          onSearchChange={setSearch}
-        />
+        {loadingConvs ? (
+          <div className="p-3 space-y-3">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} className="flex gap-3 px-3">
+                <Skeleton className="h-10 w-10 rounded-full shrink-0" />
+                <div className="flex-1 space-y-2">
+                  <Skeleton className="h-4 w-3/4" />
+                  <Skeleton className="h-3 w-full" />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <ConversationList
+            conversations={filtered}
+            selectedId={selectedId || effectiveSelectedId}
+            onSelect={setSelectedId}
+            statusFilter={statusFilter}
+            onStatusFilterChange={setStatusFilter}
+            search={search}
+            onSearchChange={setSearch}
+          />
+        )}
       </div>
 
       {/* Chat Area */}
@@ -50,7 +90,7 @@ export default function Inbox() {
         {selected ? (
           <ChatArea
             conversation={selected}
-            messages={messages}
+            messages={currentMessages}
             onToggleContactPanel={() => setShowContactPanel(!showContactPanel)}
           />
         ) : (
@@ -68,7 +108,7 @@ export default function Inbox() {
         <div className="w-80 border-l shrink-0 overflow-auto hidden xl:block">
           <ContactPanel
             conversation={selected}
-            notes={mockNotes.filter(n => n.conversation_id === selectedId)}
+            notes={notes}
           />
         </div>
       )}
