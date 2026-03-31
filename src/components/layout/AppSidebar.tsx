@@ -25,6 +25,17 @@ const bottomNav = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const initials = user?.user_metadata?.name
+    ? user.user_metadata.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() || 'U';
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <TooltipProvider delayDuration={0}>
