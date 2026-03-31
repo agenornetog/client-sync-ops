@@ -856,6 +856,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      create_workspace_for_user: {
+        Args: { _name: string; _slug: string; _timezone?: string }
+        Returns: string
+      }
       get_user_workspace_id: { Args: { _user_id: string }; Returns: string }
       has_role: {
         Args: {
