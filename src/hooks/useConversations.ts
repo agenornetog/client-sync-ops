@@ -132,14 +132,29 @@ export function useConversations() {
         .select(`
           *,
           contacts(*),
-          profiles:assigned_agent_id(id, name, email, avatar_url, is_online),
           queues(*),
           conversation_tags(tags(*))
         `)
         .order('last_message_at', { ascending: false, nullsFirst: false });
 
       if (error) throw error;
-      return (data || []).map((row: any) => mapRowToConversation(row));
+
+      // Fetch agent profiles separately for assigned conversations
+      const agentIds = [...new Set((data || []).map(c => c.assigned_agent_id).filter(Boolean))];
+      let agentsMap: Record<string, any> = {};
+      
+      if (agentIds.length > 0) {
+        const { data: agents } = await supabase
+          .from('profiles')
+          .select('id, name, email, avatar_url, is_online')
+          .in('id', agentIds);
+        
+        if (agents) {
+          agentsMap = Object.fromEntries(agents.map(a => [a.id, a]));
+        }
+      }
+
+      return (data || []).map((row: any) => mapRowToConversation(row, agentsMap));
     },
   });
 
