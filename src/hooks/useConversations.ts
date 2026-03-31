@@ -59,7 +59,7 @@ interface ConversationRow {
   }[];
 }
 
-function mapRowToConversation(row: ConversationRow): Conversation {
+function mapRowToConversation(row: any, agentsMap: Record<string, any> = {}): Conversation {
   const contact: Contact = {
     id: row.contacts.id,
     workspace_id: row.contacts.workspace_id,
