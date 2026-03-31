@@ -27,39 +27,20 @@ export default function Onboarding() {
     setSaving(true);
 
     try {
-      // 1. Create workspace
       const slug = companyName
         .toLowerCase()
         .normalize('NFD').replace(/[\u0300-\u036f]/g, '')
         .replace(/[^a-z0-9]+/g, '-')
         .replace(/^-|-$/g, '') || 'workspace';
 
-      const { data: workspace, error: wsError } = await supabase
-        .from('workspaces')
-        .insert({ name: companyName, slug, timezone })
-        .select('id')
-        .single();
+      const { data: workspaceId, error: rpcError } = await supabase
+        .rpc('create_workspace_for_user', { _name: companyName, _slug: slug, _timezone: timezone });
 
-      if (wsError) throw wsError;
+      if (rpcError) throw rpcError;
 
-      // 2. Link profile to workspace
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .update({ workspace_id: workspace.id, name: user.email?.split('@')[0] || '' })
-        .eq('id', user.id);
-
-      if (profileError) throw profileError;
-
-      // 3. Add admin role
-      const { error: roleError } = await supabase
-        .from('user_roles')
-        .insert({ user_id: user.id, role: 'admin' });
-
-      if (roleError && !roleError.message.includes('duplicate')) throw roleError;
-
-      // 4. Create business hours
+      // Create business hours
       const businessHours = [0, 1, 2, 3, 4, 5, 6].map(day => ({
-        workspace_id: workspace.id,
+        workspace_id: workspaceId,
         day_of_week: day,
         is_open: day >= 1 && day <= 5,
         open_time: day === 6 ? '09:00' : '08:00',
