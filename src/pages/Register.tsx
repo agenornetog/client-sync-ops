@@ -4,22 +4,94 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { useToast } from '@/hooks/use-toast';
+import { supabase } from '@/integrations/supabase/client';
+import { toast } from 'sonner';
 
 export default function Register() {
   const [form, setForm] = useState({ name: '', company: '', email: '', password: '' });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
-  const { toast } = useToast();
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
-    setTimeout(() => {
-      setLoading(false);
-      toast({ title: 'Conta criada com sucesso!' });
+
+    try {
+      // 1. Sign up user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: form.email,
+        password: form.password,
+        options: {
+          emailRedirectTo: window.location.origin,
+          data: {
+            name: form.name,
+            company: form.company,
+          },
+        },
+      });
+
+      if (signUpError) {
+        if (signUpError.message.includes('already registered')) {
+          toast.error('Este e-mail já está cadastrado');
+        } else {
+          toast.error(signUpError.message);
+        }
+        return;
+      }
+
+      if (!authData.user) {
+        toast.error('Erro ao criar conta');
+        return;
+      }
+
+      // 2. Create workspace
+      const slug = form.company
+        .toLowerCase()
+        .normalize('NFD')
+        .replace(/[\u0300-\u036f]/g, '')
+        .replace(/[^a-z0-9]+/g, '-')
+        .replace(/^-|-$/g, '') || 'workspace';
+
+      const { data: workspace, error: wsError } = await supabase
+        .from('workspaces')
+        .insert({
+          name: form.company,
+          slug: `${slug}-${Date.now().toString(36)}`,
+        })
+        .select()
+        .single();
+
+      if (wsError) {
+        console.error('Workspace creation error:', wsError);
+        // Workspace will be created later via onboarding if this fails
+      }
+
+      // 3. Link profile to workspace & add admin role
+      if (workspace) {
+        await supabase
+          .from('profiles')
+          .update({
+            workspace_id: workspace.id,
+            name: form.name,
+          })
+          .eq('id', authData.user.id);
+
+        await supabase
+          .from('user_roles')
+          .insert({
+            user_id: authData.user.id,
+            role: 'admin',
+          });
+      }
+
+      toast.success('Conta criada com sucesso!');
       navigate('/onboarding');
-    }, 800);
+    } catch (err) {
+      console.error('Register error:', err);
+      toast.error('Erro ao criar conta');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const update = (key: string, value: string) => setForm(f => ({ ...f, [key]: value }));
@@ -53,7 +125,7 @@ export default function Register() {
               </div>
               <div className="space-y-2">
                 <Label>Senha</Label>
-                <Input type="password" placeholder="Mínimo 8 caracteres" value={form.password} onChange={e => update('password', e.target.value)} required minLength={8} />
+                <Input type="password" placeholder="Mínimo 6 caracteres" value={form.password} onChange={e => update('password', e.target.value)} required minLength={6} />
               </div>
             </CardContent>
             <CardFooter className="flex-col gap-4">
