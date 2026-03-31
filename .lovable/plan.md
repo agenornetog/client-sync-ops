@@ -1,76 +1,58 @@
 
 
-# Criar todas as tabelas do AtendePro no Supabase
+# Plano: Redeploy seed-data + Gerenciamento de Instâncias WhatsApp
 
-## Resumo
-Criar a modelagem completa do banco de dados com enums, tabelas, RLS policies e funções auxiliares. Todas as entidades definidas em `src/types/index.ts` serão mapeadas para tabelas Supabase.
+## Contexto
+1. A Edge Function `seed-data` já foi corrigida no código (usa `getUser()`) mas os logs mostram que o deploy antigo com `getClaims` ainda está rodando — precisa redeploy.
+2. A página Canais (`/canais`) usa mock data. Precisa conectar ao Supabase e permitir CRUD de instâncias.
 
-## Migration SQL
+---
 
-Uma única migration com:
+## Etapa 1 — Redeploy da Edge Function `seed-data`
 
-### 1. Enums
-- `app_role` (admin, supervisor, atendente)
-- `conversation_status` (open, pending, attending, resolved, closed)
-- `conversation_type` (individual, group)
-- `channel_type` (whatsapp, instagram, telegram, webchat, email)
-- `message_direction` (inbound, outbound)
-- `message_type` (text, image, audio, video, document, sticker, location, contact, interactive, template, system)
-- `message_status` (pending, sent, delivered, read, failed)
-- `instance_status` (connected, disconnected, connecting, qr_code)
-- `flow_trigger` (welcome, keyword, tag, queue, manual)
-- `flow_node_type` (send_message, wait_response, condition, add_tag, remove_tag, assign_queue, assign_agent, delay, end, transfer_human, webhook)
-- `flow_execution_status` (running, completed, failed, paused)
-- `contact_origin` (whatsapp, manual, import, api)
-- `webhook_event_status` (received, processed, failed)
+O código já está correto. Apenas forçar o redeploy usando a ferramenta de deploy de Edge Functions para que a versão corrigida entre em produção.
 
-### 2. Tabelas (em ordem de dependência)
+---
 
-| Tabela | Descrição |
-|--------|-----------|
-| `workspaces` | Tenant principal |
-| `profiles` | Perfil do usuário (referencia auth.users) |
-| `user_roles` | Roles separada (admin/supervisor/atendente) |
-| `agent_profiles` | Config de atendente (max chats, disponibilidade) |
-| `whatsapp_instances` | Instâncias UAZAPI por workspace |
-| `tags` | Tags coloridas por workspace |
-| `queues` | Filas de atendimento |
-| `queue_agents` | Relação N:N fila-agente |
-| `contacts` | Contatos/clientes |
-| `contact_tags` | Relação N:N contato-tag |
-| `conversations` | Conversas (core do inbox) |
-| `conversation_tags` | Relação N:N conversa-tag |
-| `messages` | Mensagens de cada conversa |
-| `internal_notes` | Notas internas por conversa |
-| `quick_replies` | Respostas rápidas |
-| `flows` | Fluxos de automação |
-| `flow_nodes` | Nós de cada fluxo |
-| `flow_executions` | Execuções de fluxo |
-| `business_hours` | Horários de atendimento |
-| `webhook_events` | Log de webhooks recebidos |
-| `audit_logs` | Log de auditoria |
+## Etapa 2 — Página de Gerenciamento de Instâncias WhatsApp
 
-### 3. Funções de segurança
-- `has_role(uuid, app_role)` — SECURITY DEFINER para verificar role sem recursão RLS
-- `get_user_workspace_id(uuid)` — retorna workspace do usuário
+### 2a. Hook `useInstances`
+Criar `src/hooks/useInstances.ts`:
+- Busca instâncias da tabela `whatsapp_instances` filtradas pelo workspace do usuário (RLS cuida disso)
+- CRUD completo: criar, editar, excluir instâncias
+- Real-time subscription para atualizações de status
 
-### 4. RLS Policies
-- Todas as tabelas com RLS habilitado
-- Política padrão: usuário autenticado só acessa dados do próprio workspace
-- `user_roles` usa `has_role()` para evitar recursão
-- `profiles` permite leitura do próprio perfil e admins veem todos do workspace
+### 2b. Refatorar `src/pages/Channels.tsx`
+Remover import de `mockInstances` e conectar ao hook real:
+- **Listagem**: Cards com status real (connected/disconnected/connecting/qr_code)
+- **Criar instância**: Dialog/Sheet com formulário (nome, telefone, API URL, API Token)
+- **Editar instância**: Dialog para atualizar configurações
+- **Excluir instância**: Confirmação via AlertDialog
+- **QR Code**: Exibir `qr_code` da instância quando status = `qr_code`
+- **Reconectar**: Botão que chama a UAZAPI para reconectar (via Edge Function futura)
+- **Empty state**: Quando não há instâncias, exibir CTA para criar a primeira
 
-### 5. Triggers
-- Trigger em `auth.users` → cria `profiles` automaticamente no signup (via função SECURITY DEFINER no schema public)
+### 2c. Componente de formulário
+Criar `src/components/channels/InstanceFormDialog.tsx`:
+- Campos: nome, telefone, API URL, API Token
+- Validação básica
+- Modo criar/editar
 
-## Pós-migration
-- Atualizar `src/integrations/supabase/types.ts` automaticamente (feito pelo sistema)
-- O frontend continuará usando mock data até autenticação ser implementada
+---
 
-## Notas
-- Tokens UAZAPI armazenados em `whatsapp_instances.api_token` (texto, protegido por RLS)
-- `custom_fields` em contacts como JSONB
-- `metadata` em messages como JSONB
-- `config` em flow_nodes como JSONB
-- `variables` em quick_replies como TEXT[]
+## Arquivos modificados/criados
+
+| Arquivo | Ação |
+|---------|------|
+| `src/hooks/useInstances.ts` | Criar — hook com CRUD + real-time |
+| `src/components/channels/InstanceFormDialog.tsx` | Criar — dialog de formulário |
+| `src/pages/Channels.tsx` | Refatorar — dados reais, CRUD, empty state |
+| `supabase/functions/seed-data/index.ts` | Redeploy (sem alteração de código) |
+
+---
+
+## Detalhes técnicos
+- RLS já configurada na tabela `whatsapp_instances` com filtro por workspace
+- Campos sensíveis (`api_token`) exibidos com máscara (••••) e botão para revelar
+- O seed-data já insere 2 instâncias de exemplo, então após o redeploy e execução do seed, a página terá dados reais
 
