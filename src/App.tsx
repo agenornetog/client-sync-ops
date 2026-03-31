@@ -38,7 +38,7 @@ const App = () => (
             <Route path="/cadastro" element={<Register />} />
             <Route path="/esqueci-senha" element={<ForgotPassword />} />
             <Route path="/redefinir-senha" element={<ResetPassword />} />
-            <Route path="/onboarding" element={<Onboarding />} />
+            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
             {/* App (protected) */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
