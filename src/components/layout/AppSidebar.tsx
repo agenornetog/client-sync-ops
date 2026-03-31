@@ -1,10 +1,11 @@
 import {
   LayoutDashboard, MessageSquare, Users, Tags, Zap, GitBranch,
-  Radio, UsersRound, BarChart3, Settings
+  Radio, UsersRound, BarChart3, Settings, LogOut
 } from 'lucide-react';
-import { NavLink, useLocation } from 'react-router-dom';
+import { NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
+import { useAuth } from '@/contexts/AuthContext';
 
 const mainNav = [
   { title: 'Dashboard', url: '/dashboard', icon: LayoutDashboard },
@@ -24,6 +25,17 @@ const bottomNav = [
 
 export function AppSidebar() {
   const location = useLocation();
+  const navigate = useNavigate();
+  const { user, signOut } = useAuth();
+
+  const initials = user?.user_metadata?.name
+    ? user.user_metadata.name.split(' ').map((n: string) => n[0]).join('').slice(0, 2).toUpperCase()
+    : user?.email?.slice(0, 2).toUpperCase() || 'U';
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate('/login');
+  };
 
   return (
     <TooltipProvider delayDuration={0}>
@@ -91,10 +103,30 @@ export function AppSidebar() {
             );
           })}
 
+          {/* Logout */}
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <button
+                onClick={handleLogout}
+                className="flex h-10 w-10 items-center justify-center rounded-xl transition-colors text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+              >
+                <LogOut className="h-[18px] w-[18px]" />
+              </button>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">Sair</TooltipContent>
+          </Tooltip>
+
           {/* Avatar */}
-          <div className="mt-2 h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground">
-            AS
-          </div>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div className="mt-1 h-8 w-8 rounded-full bg-muted flex items-center justify-center text-xs font-medium text-muted-foreground cursor-default">
+                {initials}
+              </div>
+            </TooltipTrigger>
+            <TooltipContent side="right" className="text-xs">
+              {user?.email || 'Usuário'}
+            </TooltipContent>
+          </Tooltip>
         </div>
       </aside>
     </TooltipProvider>
