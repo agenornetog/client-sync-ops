@@ -5,22 +5,25 @@ import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { AdminRoute } from "@/components/auth/AdminRoute";
 import { AppLayout } from "@/components/layout/AppLayout";
+
+// Páginas Públicas
 import Login from "./pages/Login";
-import Register from "./pages/Register";
-import ForgotPassword from "./pages/ForgotPassword";
-import ResetPassword from "./pages/ResetPassword";
-import Onboarding from "./pages/Onboarding";
+
+// Páginas Protegidas (Responsável & Admin)
 import Dashboard from "./pages/Dashboard";
-import Inbox from "./pages/Inbox";
-import Contacts from "./pages/Contacts";
-import Tags from "./pages/Tags";
-import QuickReplies from "./pages/QuickReplies";
-import Flows from "./pages/Flows";
-import Channels from "./pages/Channels";
-import Groups from "./pages/Groups";
-import Reports from "./pages/Reports";
-import SettingsPage from "./pages/Settings";
+import Patrimonios from "./pages/Patrimonios";
+import PatrimonioDetalhes from "./pages/PatrimonioDetalhes";
+import Inventarios from "./pages/Inventarios";
+import Relatorios from "./pages/Relatorios";
+import Configuracoes from "./pages/Configuracoes";
+
+// Páginas Admin
+import Locais from "./pages/Locais";
+import Categorias from "./pages/Categorias";
+import Usuarios from "./pages/Usuarios";
+
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -35,23 +38,24 @@ const App = () => (
           <Routes>
             {/* Auth (public) */}
             <Route path="/login" element={<Login />} />
-            <Route path="/cadastro" element={<Register />} />
-            <Route path="/esqueci-senha" element={<ForgotPassword />} />
-            <Route path="/redefinir-senha" element={<ResetPassword />} />
-            <Route path="/onboarding" element={<ProtectedRoute><Onboarding /></ProtectedRoute>} />
 
             {/* App (protected) */}
             <Route element={<ProtectedRoute><AppLayout /></ProtectedRoute>}>
               <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/inbox" element={<Inbox />} />
-              <Route path="/contatos" element={<Contacts />} />
-              <Route path="/tags" element={<Tags />} />
-              <Route path="/respostas-rapidas" element={<QuickReplies />} />
-              <Route path="/fluxos" element={<Flows />} />
-              <Route path="/canais" element={<Channels />} />
-              <Route path="/grupos" element={<Groups />} />
-              <Route path="/relatorios" element={<Reports />} />
-              <Route path="/configuracoes" element={<SettingsPage />} />
+              
+              {/* Módulo de Patrimônio */}
+              <Route path="/patrimonios" element={<Patrimonios />} />
+              <Route path="/patrimonios/:id" element={<PatrimonioDetalhes />} />
+              
+              {/* Inventário e Relatórios */}
+              <Route path="/inventarios" element={<Inventarios />} />
+              <Route path="/relatorios" element={<Relatorios />} />
+              <Route path="/configuracoes" element={<Configuracoes />} />
+
+              {/* Módulos Administrativos (Somente Admin) */}
+              <Route path="/locais" element={<AdminRoute><Locais /></AdminRoute>} />
+              <Route path="/categorias" element={<AdminRoute><Categorias /></AdminRoute>} />
+              <Route path="/usuarios" element={<AdminRoute><Usuarios /></AdminRoute>} />
             </Route>
 
             {/* Redirects */}

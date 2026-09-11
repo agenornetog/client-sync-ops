@@ -4,7 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff } from 'lucide-react';
+import { Eye, EyeOff, Church } from 'lucide-react';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 
@@ -25,8 +25,6 @@ export default function Login() {
       if (error) {
         if (error.message.includes('Invalid login credentials')) {
           toast.error('E-mail ou senha incorretos');
-        } else if (error.message.includes('Email not confirmed')) {
-          toast.error('Confirme seu e-mail antes de fazer login');
         } else {
           toast.error(error.message);
         }
@@ -45,15 +43,15 @@ export default function Login() {
   return (
     <div className="min-h-screen flex items-center justify-center bg-muted/30 px-4">
       <div className="w-full max-w-md">
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="flex h-10 w-10 items-center justify-center rounded-xl bg-primary text-primary-foreground font-bold text-lg">A</div>
-          <span className="text-2xl font-bold">AtendePro</span>
+        <div className="flex items-center justify-center gap-3 mb-8 text-primary">
+          <Church className="h-10 w-10" />
+          <span className="text-2xl font-bold">Inventário Paroquial</span>
         </div>
 
         <Card className="border-0 shadow-lg">
           <CardHeader className="text-center pb-4">
-            <CardTitle className="text-xl">Entrar na sua conta</CardTitle>
-            <CardDescription>Acesse sua plataforma de atendimento</CardDescription>
+            <CardTitle className="text-xl">Acesso ao Sistema</CardTitle>
+            <CardDescription>Insira suas credenciais para continuar</CardDescription>
           </CardHeader>
           <form onSubmit={handleSubmit}>
             <CardContent className="space-y-4">
@@ -64,7 +62,7 @@ export default function Login() {
               <div className="space-y-2">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password">Senha</Label>
-                  <Link to="/esqueci-senha" className="text-xs text-primary hover:underline">Esqueceu a senha?</Link>
+                  {/* <Link to="/esqueci-senha" className="text-xs text-primary hover:underline">Esqueceu a senha?</Link> */}
                 </div>
                 <div className="relative">
                   <Input id="password" type={showPassword ? 'text' : 'password'} placeholder="••••••••" value={password} onChange={e => setPassword(e.target.value)} required />
@@ -78,10 +76,6 @@ export default function Login() {
               <Button type="submit" className="w-full" disabled={loading}>
                 {loading ? 'Entrando...' : 'Entrar'}
               </Button>
-              <p className="text-sm text-muted-foreground">
-                Não tem uma conta?{' '}
-                <Link to="/cadastro" className="text-primary hover:underline font-medium">Criar conta</Link>
-              </p>
             </CardFooter>
           </form>
         </Card>
