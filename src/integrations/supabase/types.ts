@@ -14,16 +14,601 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      baixas: {
+        Row: {
+          created_at: string | null
+          id: string
+          motivo: string
+          observacao: string | null
+          patrimonio_id: string | null
+          realizado_por: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          motivo: string
+          observacao?: string | null
+          patrimonio_id?: string | null
+          realizado_por?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          motivo?: string
+          observacao?: string | null
+          patrimonio_id?: string | null
+          realizado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "baixas_patrimonio_id_fkey"
+            columns: ["patrimonio_id"]
+            isOneToOne: false
+            referencedRelation: "patrimonios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "baixas_realizado_por_fkey"
+            columns: ["realizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      categorias: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          descricao: string | null
+          id: string
+          nome: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          descricao?: string | null
+          id?: string
+          nome?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      inventario_conferencias: {
+        Row: {
+          conferido_em: string | null
+          conferido_por: string | null
+          id: string
+          inventario_id: string | null
+          local_id: string | null
+          observacao: string | null
+          patrimonio_id: string | null
+          status_conferencia: Database["public"]["Enums"]["status_conferencia"]
+        }
+        Insert: {
+          conferido_em?: string | null
+          conferido_por?: string | null
+          id?: string
+          inventario_id?: string | null
+          local_id?: string | null
+          observacao?: string | null
+          patrimonio_id?: string | null
+          status_conferencia: Database["public"]["Enums"]["status_conferencia"]
+        }
+        Update: {
+          conferido_em?: string | null
+          conferido_por?: string | null
+          id?: string
+          inventario_id?: string | null
+          local_id?: string | null
+          observacao?: string | null
+          patrimonio_id?: string | null
+          status_conferencia?: Database["public"]["Enums"]["status_conferencia"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_conferencias_conferido_por_fkey"
+            columns: ["conferido_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_conferencias_inventario_id_fkey"
+            columns: ["inventario_id"]
+            isOneToOne: false
+            referencedRelation: "inventarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_conferencias_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "locais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_conferencias_patrimonio_id_fkey"
+            columns: ["patrimonio_id"]
+            isOneToOne: false
+            referencedRelation: "patrimonios"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventario_locais: {
+        Row: {
+          concluido_em: string | null
+          id: string
+          iniciado_em: string | null
+          inventario_id: string | null
+          local_id: string | null
+          responsavel_id: string | null
+          status: string | null
+        }
+        Insert: {
+          concluido_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          inventario_id?: string | null
+          local_id?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+        }
+        Update: {
+          concluido_em?: string | null
+          id?: string
+          iniciado_em?: string | null
+          inventario_id?: string | null
+          local_id?: string | null
+          responsavel_id?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventario_locais_inventario_id_fkey"
+            columns: ["inventario_id"]
+            isOneToOne: false
+            referencedRelation: "inventarios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_locais_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "locais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "inventario_locais_responsavel_id_fkey"
+            columns: ["responsavel_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      inventarios: {
+        Row: {
+          created_at: string | null
+          criado_por: string | null
+          data_fim: string | null
+          data_inicio: string
+          descricao: string | null
+          id: string
+          nome: string
+          status: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          criado_por?: string | null
+          data_fim?: string | null
+          data_inicio: string
+          descricao?: string | null
+          id?: string
+          nome: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          criado_por?: string | null
+          data_fim?: string | null
+          data_inicio?: string
+          descricao?: string | null
+          id?: string
+          nome?: string
+          status?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "inventarios_criado_por_fkey"
+            columns: ["criado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      locais: {
+        Row: {
+          ativo: boolean | null
+          bairro: string | null
+          cidade: string | null
+          created_at: string | null
+          endereco: string | null
+          id: string
+          nome: string
+          observacoes: string | null
+          telefone: string | null
+          tipo: string
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          bairro?: string | null
+          cidade?: string | null
+          created_at?: string | null
+          endereco?: string | null
+          id?: string
+          nome: string
+          observacoes?: string | null
+          telefone?: string | null
+          tipo: string
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          bairro?: string | null
+          cidade?: string | null
+          created_at?: string | null
+          endereco?: string | null
+          id?: string
+          nome?: string
+          observacoes?: string | null
+          telefone?: string | null
+          tipo?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      patrimonio_fotos: {
+        Row: {
+          created_at: string | null
+          id: string
+          patrimonio_id: string | null
+          storage_path: string
+          uploaded_by: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          patrimonio_id?: string | null
+          storage_path: string
+          uploaded_by?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          patrimonio_id?: string | null
+          storage_path?: string
+          uploaded_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patrimonio_fotos_patrimonio_id_fkey"
+            columns: ["patrimonio_id"]
+            isOneToOne: false
+            referencedRelation: "patrimonios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patrimonio_fotos_uploaded_by_fkey"
+            columns: ["uploaded_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patrimonio_historico: {
+        Row: {
+          created_at: string | null
+          dados_anteriores: Json | null
+          dados_novos: Json | null
+          id: string
+          observacao: string | null
+          patrimonio_id: string | null
+          tipo_evento: string
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          observacao?: string | null
+          patrimonio_id?: string | null
+          tipo_evento: string
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          dados_anteriores?: Json | null
+          dados_novos?: Json | null
+          id?: string
+          observacao?: string | null
+          patrimonio_id?: string | null
+          tipo_evento?: string
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patrimonio_historico_patrimonio_id_fkey"
+            columns: ["patrimonio_id"]
+            isOneToOne: false
+            referencedRelation: "patrimonios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patrimonio_historico_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      patrimonios: {
+        Row: {
+          ambiente: string | null
+          atualizado_por: string | null
+          cadastrado_por: string | null
+          categoria_id: string | null
+          codigo: string | null
+          created_at: string | null
+          descricao: string
+          estado_conservacao: Database["public"]["Enums"]["estado_conservacao"]
+          id: string
+          local_id: string | null
+          marca: string | null
+          modelo: string | null
+          numero_serie: string | null
+          observacoes: string | null
+          quantidade: number | null
+          status: Database["public"]["Enums"]["status_patrimonio"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          ambiente?: string | null
+          atualizado_por?: string | null
+          cadastrado_por?: string | null
+          categoria_id?: string | null
+          codigo?: string | null
+          created_at?: string | null
+          descricao: string
+          estado_conservacao: Database["public"]["Enums"]["estado_conservacao"]
+          id?: string
+          local_id?: string | null
+          marca?: string | null
+          modelo?: string | null
+          numero_serie?: string | null
+          observacoes?: string | null
+          quantidade?: number | null
+          status?: Database["public"]["Enums"]["status_patrimonio"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          ambiente?: string | null
+          atualizado_por?: string | null
+          cadastrado_por?: string | null
+          categoria_id?: string | null
+          codigo?: string | null
+          created_at?: string | null
+          descricao?: string
+          estado_conservacao?: Database["public"]["Enums"]["estado_conservacao"]
+          id?: string
+          local_id?: string | null
+          marca?: string | null
+          modelo?: string | null
+          numero_serie?: string | null
+          observacoes?: string | null
+          quantidade?: number | null
+          status?: Database["public"]["Enums"]["status_patrimonio"] | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "patrimonios_atualizado_por_fkey"
+            columns: ["atualizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patrimonios_cadastrado_por_fkey"
+            columns: ["cadastrado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patrimonios_categoria_id_fkey"
+            columns: ["categoria_id"]
+            isOneToOne: false
+            referencedRelation: "categorias"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "patrimonios_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "locais"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          ativo: boolean | null
+          created_at: string | null
+          email: string
+          id: string
+          nome: string | null
+          role: Database["public"]["Enums"]["user_role"] | null
+          updated_at: string | null
+        }
+        Insert: {
+          ativo?: boolean | null
+          created_at?: string | null
+          email: string
+          id: string
+          nome?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Update: {
+          ativo?: boolean | null
+          created_at?: string | null
+          email?: string
+          id?: string
+          nome?: string | null
+          role?: Database["public"]["Enums"]["user_role"] | null
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
+      transferencias: {
+        Row: {
+          created_at: string | null
+          id: string
+          local_destino_id: string | null
+          local_origem_id: string | null
+          observacao: string | null
+          patrimonio_id: string | null
+          realizado_por: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          local_destino_id?: string | null
+          local_origem_id?: string | null
+          observacao?: string | null
+          patrimonio_id?: string | null
+          realizado_por?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          local_destino_id?: string | null
+          local_origem_id?: string | null
+          observacao?: string | null
+          patrimonio_id?: string | null
+          realizado_por?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transferencias_local_destino_id_fkey"
+            columns: ["local_destino_id"]
+            isOneToOne: false
+            referencedRelation: "locais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_local_origem_id_fkey"
+            columns: ["local_origem_id"]
+            isOneToOne: false
+            referencedRelation: "locais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_patrimonio_id_fkey"
+            columns: ["patrimonio_id"]
+            isOneToOne: false
+            referencedRelation: "patrimonios"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transferencias_realizado_por_fkey"
+            columns: ["realizado_por"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      usuario_locais: {
+        Row: {
+          created_at: string | null
+          id: string
+          local_id: string | null
+          usuario_id: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          local_id?: string | null
+          usuario_id?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          local_id?: string | null
+          usuario_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "usuario_locais_local_id_fkey"
+            columns: ["local_id"]
+            isOneToOne: false
+            referencedRelation: "locais"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "usuario_locais_usuario_id_fkey"
+            columns: ["usuario_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      get_user_locais: { Args: never; Returns: string[] }
+      is_admin: { Args: never; Returns: boolean }
     }
     Enums: {
-      [_ in never]: never
+      estado_conservacao:
+        | "novo"
+        | "excelente"
+        | "bom"
+        | "regular"
+        | "ruim"
+        | "danificado"
+        | "inutilizado"
+      status_conferencia:
+        | "localizado"
+        | "nao_localizado"
+        | "danificado"
+        | "transferido"
+        | "necessita_atualizacao"
+      status_patrimonio: "ativo" | "baixado"
+      user_role: "admin" | "responsavel"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -150,6 +735,25 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      estado_conservacao: [
+        "novo",
+        "excelente",
+        "bom",
+        "regular",
+        "ruim",
+        "danificado",
+        "inutilizado",
+      ],
+      status_conferencia: [
+        "localizado",
+        "nao_localizado",
+        "danificado",
+        "transferido",
+        "necessita_atualizacao",
+      ],
+      status_patrimonio: ["ativo", "baixado"],
+      user_role: ["admin", "responsavel"],
+    },
   },
 } as const
